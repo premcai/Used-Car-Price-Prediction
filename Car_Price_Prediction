@@ -1,0 +1,99 @@
+# Load Required Libraries
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(caret)
+
+# Load the dataset
+data1 <- read_csv("car_prediction_data.csv")
+
+# Data Exploration
+print(head(data1))
+print(str(data1))
+print(summary(data1))
+
+# Visualize Selling Price Distribution
+ggplot(data1, aes(x = Selling_Price)) +
+    geom_histogram(binwidth = 0.5, fill = "blue", color = "black") +
+    labs(title = "Distribution of Selling Prices", x = "Selling Price", y = "Count")
+
+# Boxplot for Selling Price by Fuel Type
+ggplot(data1, aes(x = Fuel_Type, y = Selling_Price)) +
+    geom_boxplot(fill = "lightblue") +
+    labs(title = "Selling Price by Fuel Type", x = "Fuel Type", y = "Selling Price")
+
+# Data Preprocessing
+data1 <- data1 %>% select(-Car_Name)  # Remove the Car_Name variable
+
+# Convert categorical variables to factors
+data1 <- data1 %>%
+    mutate(Fuel_Type = as.factor(Fuel_Type),
+           Seller_Type = as.factor(Seller_Type),
+           Transmission = as.factor(Transmission))
+
+# Split data into training and test sets
+set.seed(123)  # For reproducibility
+train_index <- createDataPartition(data1$Selling_Price, p = 0.8, list = FALSE)
+train_data <- data1[train_index, ]
+test_data <- data1[-train_index, ]
+
+# ============================
+# KNN Model Development
+# ============================
+train_control <- trainControl(method = "cv", number = 5)
+knn_model <- train(Selling_Price ~ ., data = train_data, method = "knn", trControl = train_control)
+
+# KNN Model Evaluation
+predictions_knn <- predict(knn_model, test_data)
+rmse_knn <- sqrt(mean((predictions_knn - test_data$Selling_Price)^2))
+print(paste("KNN RMSE:", round(rmse_knn, 2)))
+
+# Display predictions for KNN
+knn_results <- data.frame(Actual = test_data$Selling_Price, Predicted = predictions_knn)
+print(head(knn_results))
+
+# ============================
+# Multiple Linear Regression Model Development
+# ============================
+linear_model <- lm(Selling_Price ~ ., data = train_data)
+summary(linear_model)
+
+# Multiple Linear Regression Evaluation
+predictions_linear <- predict(linear_model, test_data)
+rmse_linear <- sqrt(mean((predictions_linear - test_data$Selling_Price)^2))
+print(paste("Linear Regression RMSE:", round(rmse_linear, 2)))
+
+# Display predictions for Linear Regression
+linear_results <- data.frame(Actual = test_data$Selling_Price, Predicted = predictions_linear)
+print(head(linear_results))
+
+# ============================
+# Logistic Regression Model Development
+# ============================
+# Create a binary target variable for logistic regression (e.g., Selling_Price > 5 as 'High')
+data1 <- data1 %>%
+    mutate(Price_Category = ifelse(Selling_Price > 5, "High", "Low"))  # Create a binary outcome
+
+# Convert Price_Category to factor
+data1$Price_Category <- as.factor(data1$Price_Category)
+
+# Split data into training and test sets for logistic regression
+train_index_logistic <- createDataPartition(data1$Price_Category, p = 0.8, list = FALSE)
+train_data_logistic <- data1[train_index_logistic, ]
+test_data_logistic <- data1[-train_index_logistic, ]
+
+# Logistic Regression Model Development
+logistic_model <- glm(Price_Category ~ ., data = train_data_logistic, family = binomial)
+summary(logistic_model)
+
+# Logistic Regression Predictions
+logistic_predictions <- predict(logistic_model, test_data_logistic, type = "response")
+logistic_class <- ifelse(logistic_predictions > 0.5, "High", "Low")
+
+# Confusion Matrix for Logistic Regression
+confusion_matrix <- table(Predicted = logistic_class, Actual = test_data_logistic$Price_Category)
+print(confusion_matrix)
+
+# Evaluation Metrics for Logistic Regression
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+print(paste("Logistic Regression Accuracy:", round(accuracy * 100, 2), "%"))
