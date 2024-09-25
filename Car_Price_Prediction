@@ -97,3 +97,16 @@ print(confusion_matrix)
 # Evaluation Metrics for Logistic Regression
 accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
 print(paste("Logistic Regression Accuracy:", round(accuracy * 100, 2), "%"))
+
+
+#to find the most sold car in this dataset
+# Assuming the Car_Name column is still in the dataset
+car_sales <- data1 %>%
+  group_by(Car_Name) %>%
+  summarise(Count = n()) %>%
+  arrange(desc(Count))
+
+# Display the most sold car
+most_sold_car <- car_sales[1, ]
+print(most_sold_car)
+
