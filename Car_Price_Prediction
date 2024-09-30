@@ -37,9 +37,7 @@ train_index <- createDataPartition(data1$Selling_Price, p = 0.8, list = FALSE)
 train_data <- data1[train_index, ]
 test_data <- data1[-train_index, ]
 
-# ============================
 # KNN Model Development
-# ============================
 train_control <- trainControl(method = "cv", number = 5)
 knn_model <- train(Selling_Price ~ ., data = train_data, method = "knn", trControl = train_control)
 
@@ -52,9 +50,7 @@ print(paste("KNN RMSE:", round(rmse_knn, 2)))
 knn_results <- data.frame(Actual = test_data$Selling_Price, Predicted = predictions_knn)
 print(head(knn_results))
 
-# ============================
 # Multiple Linear Regression Model Development
-# ============================
 linear_model <- lm(Selling_Price ~ ., data = train_data)
 summary(linear_model)
 
@@ -66,47 +62,4 @@ print(paste("Linear Regression RMSE:", round(rmse_linear, 2)))
 # Display predictions for Linear Regression
 linear_results <- data.frame(Actual = test_data$Selling_Price, Predicted = predictions_linear)
 print(head(linear_results))
-
-# ============================
-# Logistic Regression Model Development
-# ============================
-# Create a binary target variable for logistic regression (e.g., Selling_Price > 5 as 'High')
-data1 <- data1 %>%
-    mutate(Price_Category = ifelse(Selling_Price > 5, "High", "Low"))  # Create a binary outcome
-
-# Convert Price_Category to factor
-data1$Price_Category <- as.factor(data1$Price_Category)
-
-# Split data into training and test sets for logistic regression
-train_index_logistic <- createDataPartition(data1$Price_Category, p = 0.8, list = FALSE)
-train_data_logistic <- data1[train_index_logistic, ]
-test_data_logistic <- data1[-train_index_logistic, ]
-
-# Logistic Regression Model Development
-logistic_model <- glm(Price_Category ~ ., data = train_data_logistic, family = binomial)
-summary(logistic_model)
-
-# Logistic Regression Predictions
-logistic_predictions <- predict(logistic_model, test_data_logistic, type = "response")
-logistic_class <- ifelse(logistic_predictions > 0.5, "High", "Low")
-
-# Confusion Matrix for Logistic Regression
-confusion_matrix <- table(Predicted = logistic_class, Actual = test_data_logistic$Price_Category)
-print(confusion_matrix)
-
-# Evaluation Metrics for Logistic Regression
-accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
-print(paste("Logistic Regression Accuracy:", round(accuracy * 100, 2), "%"))
-
-
-#to find the most sold car in this dataset
-# Assuming the Car_Name column is still in the dataset
-car_sales <- data1 %>%
-  group_by(Car_Name) %>%
-  summarise(Count = n()) %>%
-  arrange(desc(Count))
-
-# Display the most sold car
-most_sold_car <- car_sales[1, ]
-print(most_sold_car)
 
