@@ -5,5 +5,4 @@ and SELLING PRICES and compare it in a table like format.
 This should give insights on Preprocessing, Visualization and Regression.
 
 
-
-****** THIS IS AN ON PROGRESS PROJECT AT THE MOMENT AND WILL BE COMPLETED SHORTLY *******
+Contact jekalister.prem@gmail.com for Improvements and Suggestions
